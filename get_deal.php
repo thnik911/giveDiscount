@@ -2,7 +2,7 @@
 ini_set("display_errors","1");
 ini_set("display_startup_errors","1");
 ini_set('error_reporting', E_ALL);
-writetolog($_REQUEST, 'new request');
+
 
 $cnt = $_REQUEST['cnt'];
 $deal = $_REQUEST['deal'];
@@ -40,8 +40,6 @@ $dealinfo = executeREST(
 
     $totalWinDeals = $dealinfo['total'];
 
-    //writetolog($totalWinDeals, 'totalWinDeals');
-
     if($totalWinDeals > 0){
     while($globalcount <= $totalDeal){    
         $next = 'Y';
@@ -76,14 +74,12 @@ $dealinfo = executeREST(
         $nextPage = $dealinfo['next'];
     }
 }
-    writetolog($totalSummOfDeal, 'dealinfo');
     }else{
         $next = 'N';
     }
 
     $merge = 'DEAL_' . $deal;
 if($totalSummOfDeal > 1 and $next == 'Y'){
-    writeToLog('Give discount');
     $startworkflow = executeREST(
     'bizproc.workflow.start',
     array(
@@ -98,7 +94,6 @@ if($totalSummOfDeal > 1 and $next == 'Y'){
         ),
     $domain, $auth, $user);
 }else{
-    writeToLog('NOT give discount');
 }
 
 function executeREST ($method, array $params, $domain, $auth, $user) {
