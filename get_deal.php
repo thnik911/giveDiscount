@@ -1,14 +1,13 @@
 <?php
-ini_set("display_errors","1");
-ini_set("display_startup_errors","1");
+ini_set("display_errors", "1");
+ini_set("display_startup_errors", "1");
 ini_set('error_reporting', E_ALL);
-
 
 $cnt = $_REQUEST['cnt'];
 $deal = $_REQUEST['deal'];
 
 //AUTH Б24
-require_once('auth.php');
+require_once 'auth.php';
 
 $countForDeal = 0;
 $totalSummOfDeal = 0;
@@ -24,28 +23,28 @@ $newDate = $date->format('Y-m-d');
 $dealinfo = executeREST(
     'crm.deal.list',
     array(
-            'order' => array(
-                'CLOSEDATE' => 'DESC',
-            ),
-            'filter' => array(
-                'CONTACT_ID' => $cnt,
-                'STAGE_ID' => 'C7:WON',
-                '>CLOSEDATE' => $newDate,
-            ),
-            'select' => array(
-                'ID', 'CLOSEDATE',
-            ),
+        'order' => array(
+            'CLOSEDATE' => 'DESC',
         ),
+        'filter' => array(
+            'CONTACT_ID' => $cnt,
+            'STAGE_ID' => 'C7:WON',
+            '>CLOSEDATE' => $newDate,
+        ),
+        'select' => array(
+            'ID', 'CLOSEDATE',
+        ),
+    ),
     $domain, $auth, $user);
 
-    $totalWinDeals = $dealinfo['total'];
+$totalWinDeals = $dealinfo['total'];
 
-    if($totalWinDeals > 0){
-    while($globalcount <= $totalDeal){    
+if ($totalWinDeals > 0) {
+    while ($globalcount <= $totalDeal) {
         $next = 'Y';
         $dealinfo = executeREST(
-        'crm.deal.list',
-        array(
+            'crm.deal.list',
+            array(
                 'order' => array(
                     'CLOSEDATE' => 'DESC',
                 ),
@@ -58,33 +57,33 @@ $dealinfo = executeREST(
                 ),
                 'start' => $start,
             ),
-    $domain, $auth, $user);
-    $totalDeal = $dealinfo['total'];
-    
-    if($totalDeal != 0){
-    
-        while($countForDeal <= 49){
-        $summOfDeal = $dealinfo['result'][$countForDeal]['OPPORTUNITY'];
-        $totalSummOfDeal = $totalSummOfDeal + $summOfDeal;
-        $globalcount++;
-        $countForDeal++;
-        }
-        $countForDeal = 0;
-        $start = $start + 50;
-        $nextPage = $dealinfo['next'];
-    }
-}
-    }else{
-        $next = 'N';
-    }
+            $domain, $auth, $user);
+        $totalDeal = $dealinfo['total'];
 
-    $merge = 'DEAL_' . $deal;
-if($totalSummOfDeal > 1 and $next == 'Y'){
+        if ($totalDeal != 0) {
+
+            while ($countForDeal <= 49) {
+                $summOfDeal = $dealinfo['result'][$countForDeal]['OPPORTUNITY'];
+                $totalSummOfDeal = $totalSummOfDeal + $summOfDeal;
+                $globalcount++;
+                $countForDeal++;
+            }
+            $countForDeal = 0;
+            $start = $start + 50;
+            $nextPage = $dealinfo['next'];
+        }
+    }
+} else {
+    $next = 'N';
+}
+
+$merge = 'DEAL_' . $deal;
+if ($totalSummOfDeal > 1 and $next == 'Y') {
     $startworkflow = executeREST(
-    'bizproc.workflow.start',
-    array(
-            'TEMPLATE_ID' => '227',	
-            'DOCUMENT_ID' => array (
+        'bizproc.workflow.start',
+        array(
+            'TEMPLATE_ID' => '227',
+            'DOCUMENT_ID' => array(
                 'crm', 'CCrmDocumentDeal', $merge,
             ),
             'PARAMETERS' => array(
@@ -92,12 +91,14 @@ if($totalSummOfDeal > 1 and $next == 'Y'){
                 'Parameter2' => $totalSummOfDeal,
             ),
         ),
-    $domain, $auth, $user);
-}else{
+        $domain, $auth, $user);
+} else {
+
 }
 
-function executeREST ($method, array $params, $domain, $auth, $user) {
-    $queryUrl = 'https://'.$domain.'/rest/'.$user.'/'.$auth.'/'.$method.'.json';
+function executeREST($method, array $params, $domain, $auth, $user)
+{
+    $queryUrl = 'https://' . $domain . '/rest/' . $user . '/' . $auth . '/' . $method . '.json';
     $queryData = http_build_query($params);
     $curl = curl_init();
     curl_setopt_array($curl, array(
@@ -112,14 +113,13 @@ function executeREST ($method, array $params, $domain, $auth, $user) {
     curl_close($curl);
 }
 
-function writeToLog($data, $title = '') {
-$log = "\n------------------------\n";
-$log .= date("Y.m.d G:i:s") . "\n";
-$log .= (strlen($title) > 0 ? $title : 'DEBUG') . "\n";
-$log .= print_r($data, 1);
-$log .= "\n------------------------\n";
-file_put_contents(getcwd() . '/get_deal.log', $log, FILE_APPEND);
-return true;
+function writeToLog($data, $title = '')
+{
+    $log = "\n------------------------\n";
+    $log .= date("Y.m.d G:i:s") . "\n";
+    $log .= (strlen($title) > 0 ? $title : 'DEBUG') . "\n";
+    $log .= print_r($data, 1);
+    $log .= "\n------------------------\n";
+    file_put_contents(getcwd() . '/get_deal.log', $log, FILE_APPEND);
+    return true;
 }
-
-?>
